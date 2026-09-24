@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ALFI Test — Account Officer Fit Indicator</title>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1f2a24; --muted:#6b7a70;
+  --accent:#2f6b4f; --accent2:#e7a33e; --line:#e3e0d6; --bad:#c65b4e;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171a17; --card:#1f2420; --ink:#eef0ec; --muted:#9aa89f;
+    --accent:#5fae86; --accent2:#e7a33e; --line:#2c322c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171a17; --card:#1f2420; --ink:#eef0ec; --muted:#9aa89f;
+  --accent:#5fae86; --accent2:#e7a33e; --line:#2c322c;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px); height:100%;}
+body{
+  margin:0; min-height:100%; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:20px 16px 40px; overflow-x:hidden;
+}
+.wrap{max-width:520px;margin:0 auto;}
+header{text-align:center;margin-bottom:14px;}
+.badge{
+  display:inline-block;background:var(--accent);color:#fff;font-size:12px;
+  font-weight:700;letter-spacing:.06em;padding:4px 10px;border-radius:999px;margin-bottom:8px;
+}
+h1{font-size:21px;margin:4px 0 4px;}
+.sub{color:var(--muted);font-size:13px;margin:0;}
+.sub b{color:var(--ink);}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:14px 0 4px;}
+.progress-bar{height:100%;background:var(--accent);width:0%;transition:width .35s ease;}
+.progress-label{text-align:right;font-size:11px;color:var(--muted);margin-bottom:10px;}
+
+.stage{position:relative; min-height:340px;}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:20px;box-shadow:0 6px 18px rgba(0,0,0,.05);
+  animation:slideIn .32s ease;
+}
+@keyframes slideIn{from{opacity:0; transform:translateX(24px);} to{opacity:1; transform:translateX(0);}}
+@keyframes slideOut{from{opacity:1; transform:translateX(0);} to{opacity:0; transform:translateX(-24px);}}
+.card.leaving{animation:slideOut .22s ease forwards;}
+
+.qnum{color:var(--accent2);font-weight:700;font-size:12px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.qnum .tag{background:var(--line);color:var(--muted);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;}
+.qtext{font-size:17px;font-weight:700;margin:0 0 14px;line-height:1.4;}
+.opt{
+  display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:12px;
+  padding:13px 14px;margin-bottom:9px;cursor:pointer;font-size:14px;line-height:1.4;
+  transition:border-color .15s, background .15s, transform .1s;
+}
+.opt:active{transform:scale(.98);}
+.opt .dot{
+  flex:0 0 20px;height:20px;border-radius:50%;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+}
+.opt.selected{border-color:var(--accent);background:color-mix(in srgb, var(--accent) 12%, transparent);}
+.opt.selected .dot{border-color:var(--accent);background:var(--accent);}
+.opt.selected .dot::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;}
+.opt input{display:none;}
+
+.navrow{display:flex;gap:10px;margin-top:16px;}
+button{
+  flex:1;padding:14px;border:none;border-radius:12px;background:var(--accent);
+  color:#fff;font-size:15px;font-weight:700;cursor:pointer;
+}
+button:disabled{opacity:.35;cursor:not-allowed;}
+button.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);flex:0 0 84px;}
+button.secondary{background:transparent;border:1.5px solid var(--line);color:var(--ink);margin-top:8px;}
+
+.dots{display:flex;justify-content:center;gap:5px;margin:14px 0 2px;flex-wrap:wrap;}
+.dots span{width:7px;height:7px;border-radius:50%;background:var(--line);transition:.2s;}
+.dots span.done{background:var(--accent);}
+.dots span.now{background:var(--accent2);transform:scale(1.3);}
+
+.result{text-align:center;}
+.score-circle{
+  width:130px;height:130px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:6px auto 16px;
+  font-size:30px;font-weight:800;position:relative;
+  background:conic-gradient(var(--accent) calc(var(--pct,0)*1%), var(--line) 0);
+}
+.score-circle::before{content:'';position:absolute;inset:9px;border-radius:50%;background:var(--card);}
+.score-circle span{position:relative;z-index:1;}
+.level{font-size:20px;font-weight:800;margin:4px 0;color:var(--accent);}
+.desc{color:var(--muted);font-size:14px;line-height:1.6;margin:10px 0 18px;text-align:left;}
+.breakdown{text-align:left;margin-top:6px;}
+.brow{margin-bottom:12px;}
+.brow-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;}
+.bar-bg{height:8px;background:var(--line);border-radius:99px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width 1s ease;}
+.hidden{display:none;}
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">ALFI TEST</span>
+    <h1>Account Officer Fit Indicator</h1>
+    <p class="sub">15 situasi kerja nyata untuk mengukur kecocokanmu jadi <b>Account Officer</b>.</p>
+  </header>
+
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="progress-label" id="progressLabel">0 / 15</div>
+
+  <div class="stage">
+    <div id="quiz"></div>
+    <div id="resultBox" class="card result hidden"></div>
+  </div>
+
+  <footer>ALFI · Assessment for Loan Field Indicator</footer>
+</div>
+
+<script>
+const questions = [
+ {q:"Target kunjungan harianmu belum tercapai jam 3 sore. Yang kamu lakukan:", pillar:"PLAN", opts:[
+   {t:"Lanjut kunjungan sampai target selesai walau lewat jam kerja", s:2},
+   {t:"Evaluasi rute, prioritaskan nasabah potensial terdekat dulu", s:3},
+   {t:"Selesaikan yang sempat saja, sisanya besok", s:1},
+   {t:"Minta rekan AO lain bantu tanpa koordinasi ke atasan", s:0}]},
+ {q:"Sebelum mulai kerja tiap pagi, kebiasaanmu:", pillar:"PLAN", opts:[
+   {t:"Susun urutan kunjungan berdasar prioritas & jarak tempuh", s:3},
+   {t:"Cek grup WA saja, jalan sambil mikir tujuan", s:1},
+   {t:"Ikuti rute kemarin tanpa penyesuaian", s:1},
+   {t:"Tunggu arahan dari Kepala Unit dulu", s:0}]},
+ {q:"Calon nasabah mengajukan pembiayaan tapi usahanya baru berjalan 2 bulan. Sikapmu:", pillar:"SURVEY", opts:[
+   {t:"Langsung proses karena dokumen lengkap", s:0},
+   {t:"Survei lapangan dulu, cek arus kas & karakter usaha", s:3},
+   {t:"Tolak langsung karena usaha masih baru", s:1},
+   {t:"Ikuti saja keputusan rekan kerja", s:1}]},
+ {q:"Saat survei, data omzet yang disampaikan nasabah tidak sesuai kondisi riil. Kamu:", pillar:"SURVEY", opts:[
+   {t:"Catat apa adanya sesuai versi nasabah", s:0},
+   {t:"Cross-check ke sumber lain sebelum menilai kelayakan", s:3},
+   {t:"Naikkan sedikit angka biar pengajuan lolos", s:0},
+   {t:"Laporkan ke atasan tanpa verifikasi tambahan", s:1}]},
+ {q:"Ada dua calon nasabah dengan agunan mirip tapi karakter berbeda: satu ramah tapi riwayat bayar buruk, satu pendiam tapi disiplin. Prioritasmu:", pillar:"SURVEY", opts:[
+   {t:"Pilih yang ramah, komunikasi lebih mudah ke depannya", s:0},
+   {t:"Pilih yang disiplin, karakter bayar lebih penting dari sikap", s:3},
+   {t:"Proses dua-duanya, biar KUM yang putuskan", s:1},
+   {t:"Tolak dua-duanya karena ragu", s:1}]},
+ {q:"Dokumen pengajuan pembiayaan kurang lengkap saat mendekati deadline pencairan. Kamu:", pillar:"PROCESS", opts:[
+   {t:"Proses saja dulu, dokumen menyusul belakangan", s:0},
+   {t:"Hubungi nasabah segera, bantu lengkapi & susun jadwal realistis", s:3},
+   {t:"Tunda proses tanpa komunikasi ke nasabah", s:1},
+   {t:"Serahkan sepenuhnya ke FAO tanpa follow-up", s:1}]},
+ {q:"Sistem input pengajuan pembiayaan sedang error di hari yang padat. Kamu:", pillar:"PROCESS", opts:[
+   {t:"Catat manual dulu semua data, input begitu sistem normal", s:3},
+   {t:"Tunda semua pekerjaan sampai sistem pulih", s:0},
+   {t:"Minta nasabah datang lagi besok tanpa penjelasan", s:1},
+   {t:"Laporkan ke IT lalu lupakan, biar mereka yang urus", s:1}]},
+ {q:"Nasabah baru saja cair dananya. Kunjungan pertama pasca pencairan untukmu adalah momen:", pillar:"RELATION", opts:[
+   {t:"Basa-basi saja, tugas sudah selesai", s:0},
+   {t:"Pastikan dana dipakai sesuai rencana & bangun kedekatan sejak awal", s:3},
+   {t:"Ditunda sampai jatuh tempo angsuran pertama", s:0},
+   {t:"Cukup lewat telepon/WA tanpa kunjungan fisik", s:1}]},
+ {q:"Nasabah lama tiba-tiba jarang merespons pesanmu. Kamu:", pillar:"RELATION", opts:[
+   {t:"Anggap wajar, tunggu dia yang hubungi duluan", s:0},
+   {t:"Kunjungi langsung untuk pastikan semua baik-baik saja", s:3},
+   {t:"Kirim pesan sekali lagi, kalau tidak dibalas ya sudah", s:1},
+   {t:"Tanyakan ke tetangga tanpa konfirmasi langsung ke nasabah", s:1}]},
+ {q:"Usaha nasabah terlihat mulai lesu beberapa bulan terakhir. Kamu:", pillar:"RELATION", opts:[
+   {t:"Tunggu sampai dia telat bayar baru bertindak", s:0},
+   {t:"Kunjungi lebih sering, cari penyebab & diskusikan solusi bareng", s:3},
+   {t:"Laporkan ke atasan lalu lepas tangan", s:1},
+   {t:"Anggap wajar, usaha memang naik turun", s:1}]},
+ {q:"Nasabah mulai telat angsuran 2 minggu tanpa kabar. Langkahmu:", pillar:"COLLECT", opts:[
+   {t:"Kirim pesan penagihan otomatis lalu tunggu balasan", s:1},
+   {t:"Datangi langsung, cari tahu masalah & bantu cari solusi bayar", s:3},
+   {t:"Biarkan dulu, nanti juga bayar sendiri", s:0},
+   {t:"Langsung ancam proses hukum di kunjungan pertama", s:0}]},
+ {q:"Kamu punya 15 nasabah aktif dengan status angsuran berbeda-beda. Cara mengelola:", pillar:"COLLECT", opts:[
+   {t:"Ingat-ingat saja, tidak perlu dicatat", s:0},
+   {t:"Buat pemetaan status per nasabah, prioritaskan yang berisiko telat", s:3},
+   {t:"Fokus ke nasabah besar saja", s:1},
+   {t:"Serahkan pencatatan sepenuhnya ke FAO", s:1}]},
+ {q:"Nasabah menawar untuk bayar sebagian dulu karena kondisi darurat keluarga. Kamu:", pillar:"COLLECT", opts:[
+   {t:"Tolak, harus bayar penuh sesuai jadwal", s:1},
+   {t:"Dengarkan alasannya, cek kebenarannya, lalu cari opsi realistis bersama", s:3},
+   {t:"Terima saja tanpa cek & tanpa lapor ke sistem", s:0},
+   {t:"Serahkan keputusan ke nasabah sepenuhnya", s:0}]},
+ {q:"Kepala Unit memberi arahan berbeda dari kesepakatanmu dengan FAO soal jadwal pencairan. Kamu:", pillar:"TEAM", opts:[
+   {t:"Ikuti KUM saja tanpa konfirmasi ke FAO", s:1},
+   {t:"Diskusikan bertiga untuk selaraskan keputusan", s:3},
+   {t:"Ikuti kesepakatan awal dengan FAO, abaikan arahan KUM", s:0},
+   {t:"Diamkan saja, biar mengalir apa adanya", s:0}]},
+ {q:"Menurutmu, bagian tersulit jadi Account Officer adalah:", pillar:"SURVEY", opts:[
+   {t:"Harus sering di lapangan & ketemu banyak orang tiap hari", s:1},
+   {t:"Menyeimbangkan target pencairan dengan kehati-hatian analisa risiko", s:3},
+   {t:"Terlalu banyak dokumen dan administrasi", s:1},
+   {t:"Tidak masalah, semua terasa mudah buatku", s:0}]}
+];
+
+let answers = new Array(questions.length).fill(null);
+let current = 0;
+const quizEl = document.getElementById('quiz');
+const progressBar = document.getElementById('progressBar');
+const progressLabel = document.getElementById('progressLabel');
+
+function updateProgress(){
+  const done = answers.filter(a => a !== null).length;
+  progressBar.style.width = (done/questions.length*100) + '%';
+  progressLabel.textContent = done + ' / ' + questions.length;
+}
+
+function renderDots(){
+  let html = '<div class="dots">';
+  questions.forEach((_, i) => {
+    let cls = '';
+    if (i === current) cls = 'now';
+    else if (answers[i] !== null) cls = 'done';
+    html += `<span class="${cls}"></span>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderQuestion(){
+  const item = questions[current];
+  let optsHtml = '';
+  item.opts.forEach((opt, oi) => {
+    const sel = answers[current] === oi ? 'selected' : '';
+    optsHtml += `<label class="opt ${sel}" data-oi="${oi}">
+        <span class="dot"></span>
+        <input type="radio" name="q${current}" ${sel?'checked':''}>
+        ${opt.t}
+      </label>`;
+  });
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<div class="qnum"><span class="tag">Q${current+1}</span> Pertanyaan ${current+1} dari ${questions.length}</div>
+    <p class="qtext">${item.q}</p>
+    ${optsHtml}
+    ${renderDots()}
+    <div class="navrow">
+      <button class="ghost" id="backBtn" ${current===0?'disabled':''}>Kembali</button>
+      <button id="nextBtn" ${answers[current]===null?'disabled':''}>${current===questions.length-1?'Lihat Hasil':'Lanjut'}</button>
+    </div>`;
+
+  quizEl.innerHTML = '';
+  quizEl.appendChild(card);
+
+  card.querySelectorAll('.opt').forEach(el => {
+    el.addEventListener('click', () => {
+      const oi = parseInt(el.dataset.oi, 10);
+      answers[current] = oi;
+      updateProgress();
+      renderQuestion();
+      if (current < questions.length - 1){
+        setTimeout(() => { current++; transitionTo(); }, 260);
+      }
+    });
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => { current--; transitionTo(); });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (current === questions.length - 1) showResult();
+    else { current++; transitionTo(); }
+  });
+}
+
+function transitionTo(){
+  const old = quizEl.querySelector('.card');
+  if (old) old.classList.add('leaving');
+  setTimeout(renderQuestion, old ? 120 : 0);
+}
+
+function showResult(){
+  const maxScore = questions.length * 3;
+  let total = 0;
+  const pillars = {};
+  questions.forEach((item, qi) => {
+    const opt = item.opts[answers[qi]];
+    total += opt.s;
+    pillars[item.pillar] = pillars[item.pillar] || {sum:0, max:0};
+    pillars[item.pillar].sum += opt.s;
+    pillars[item.pillar].max += 3;
+  });
+  const pct = Math.round(total/maxScore*100);
+
+  let level, desc;
+  if (pct >= 85){
+    level = "Sangat Cocok";
+    desc = "Pola jawabanmu menunjukkan kesiapan kuat di analisa kelayakan, kedisiplinan target, dan cara membangun relasi nasabah — inti dari peran Account Officer.";
+  } else if (pct >= 65){
+    level = "Cocok";
+    desc = "Secara umum kamu punya fondasi yang baik untuk peran AO. Ada beberapa area yang bisa diperkuat lagi, terutama dalam pengambilan keputusan di situasi berisiko.";
+  } else if (pct >= 45){
+    level = "Cukup, Perlu Pendampingan";
+    desc = "Kamu punya modal dasar, tapi beberapa respons menunjukkan kecenderungan pasif atau kurang hati-hati. Cocok jika didampingi mentor di awal masa kerja.";
+  } else {
+    level = "Kurang Cocok Saat Ini";
+    desc = "Pola jawabanmu cenderung menghindari inisiatif atau kurang teliti dalam situasi yang butuh analisa dan tindak lanjut aktif — dua hal krusial dalam peran AO.";
+  }
+
+  const pillarNames = {PLAN:"Perencanaan & Kunjungan", SURVEY:"Analisa Kelayakan", PROCESS:"Administrasi Pengajuan", RELATION:"Hubungan Nasabah", COLLECT:"Penagihan & Monitoring", TEAM:"Koordinasi Tim"};
+
+  let breakdownHtml = '<div class="breakdown">';
+  Object.keys(pillarNames).forEach(k => {
+    const p = pillars[k];
+    if (p){
+      const pp = Math.round(p.sum/p.max*100);
+      breakdownHtml += `<div class="brow">
+        <div class="brow-top"><span>${pillarNames[k]}</span><span>${pp}%</span></div>
+        <div class="bar-bg"><div class="bar-fill" data-w="${pp}"></div></div>
+      </div>`;
+    }
+  });
+  breakdownHtml += '</div>';
+
+  const old = quizEl.querySelector('.card');
+  if (old) old.remove();
+  const box = document.getElementById('resultBox');
+  box.classList.remove('hidden');
+  box.innerHTML = `
+    <div class="score-circle" style="--pct:${pct}"><span>${pct}%</span></div>
+    <div class="level">${level}</div>
+    <p class="desc">${desc}</p>
+    ${breakdownHtml}
+    <button class="secondary" id="retryBtn">Ulangi Tes</button>
+  `;
+  setTimeout(() => {
+    box.querySelectorAll('.bar-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  }, 60);
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    answers = new Array(questions.length).fill(null);
+    current = 0;
+    box.classList.add('hidden');
+    updateProgress();
+    renderQuestion();
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+renderQuestion();
+updateProgress();
+</script>
+</body>
+</html>
